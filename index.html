@@ -1,0 +1,1166 @@
+<!doctype html>
+<html lang="id">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Permainan Urut Angka TK</title>
+  <style>
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Arial', sans-serif;
+    }
+    
+    html, body {
+      height: 100%;
+    }
+    
+    #app {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    h1 {
+      margin: 0 0 10px 0;
+      font-weight: bold;
+    }
+    
+    .subtitle {
+      margin: 0;
+      font-size: 18px;
+    }
+    
+    .game-section {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 30px;
+    }
+    
+    .left-panel {
+      flex: 1;
+      min-width: 280px;
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border: 3px solid #f97316;
+      border-radius: 10px;
+      font-size: 16px;
+      box-sizing: border-box;
+      background: white;
+      color: black;
+    }
+    
+    .button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    
+    .button:hover {
+      transform: scale(1.05);
+    }
+    
+    .button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .button-primary {
+      background: #f97316;
+      color: white;
+    }
+    
+    .button-secondary {
+      background: #22c55e;
+      color: white;
+    }
+    
+    .status-box {
+      margin-top: 20px;
+      padding: 15px;
+      background: #fff7ed;
+      border-radius: 10px;
+      border: 2px solid #fed7aa;
+    }
+    
+    .timer-box {
+      margin-top: 15px;
+      padding: 12px;
+      background: #e0f2fe;
+      border-radius: 10px;
+      border: 2px solid #7dd3fc;
+      text-align: center;
+    }
+    
+    .timer-display {
+      font-size: 24px;
+      font-weight: bold;
+      color: #0369a1;
+    }
+    
+    .message {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    
+    .message-info {
+      background: #dbeafe;
+      border: 1px solid #93c5fd;
+    }
+    
+    .message-success {
+      background: #d1fae5;
+      border: 1px solid #6ee7b7;
+    }
+    
+    .message-error {
+      background: #fee2e2;
+      border: 1px solid #fca5a5;
+    }
+    
+    .right-panel {
+      flex: 1.5;
+      min-width: 320px;
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .board {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 8px;
+      margin-top: 15px;
+    }
+    
+    .cell {
+      aspect-ratio: 1;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      position: relative;
+    }
+    
+    .cell:hover {
+      transform: scale(1.05);
+    }
+    
+    .cell.selected {
+      transform: scale(1.1);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .cell-icon {
+      position: absolute;
+      font-size: 24px;
+      color: white;
+      background: rgba(0,0,0,0.7);
+      width: 100%;
+      height: 100%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+    }
+    
+    .cell-icon.show {
+      display: flex;
+    }
+    
+    .stats-section {
+      margin-top: 30px;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    
+    .stats-card {
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .chart-container {
+      margin-top: 15px;
+      height: 300px;
+      position: relative;
+    }
+    
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-around;
+      height: 100%;
+      gap: 10px;
+      padding: 10px 0;
+    }
+    
+    .bar-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      min-width: 60px;
+    }
+    
+    .bar {
+      width: 100%;
+      background: linear-gradient(to top, #f97316, #fb923c);
+      border-radius: 8px 8px 0 0;
+      transition: all 0.3s;
+      position: relative;
+      min-height: 5px;
+    }
+    
+    .bar-value {
+      position: absolute;
+      top: -25px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-weight: bold;
+      font-size: 14px;
+      color: #1f2937;
+    }
+    
+    .bar-label {
+      margin-top: 8px;
+      font-size: 12px;
+      text-align: center;
+      word-break: break-word;
+      color: #6b7280;
+    }
+    
+    .leaderboard-table {
+      width: 100%;
+      margin-top: 15px;
+      border-collapse: collapse;
+    }
+    
+    .leaderboard-table th,
+    .leaderboard-table td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .leaderboard-table th {
+      background: #f9fafb;
+      font-weight: bold;
+      color: #374151;
+    }
+    
+    .leaderboard-table tr:hover {
+      background: #f9fafb;
+    }
+    
+    .rank-badge {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 24px;
+      font-weight: bold;
+      font-size: 12px;
+      color: white;
+    }
+    
+    .rank-1 { background: #fbbf24; }
+    .rank-2 { background: #94a3b8; }
+    .rank-3 { background: #cd7f32; }
+    .rank-other { background: #9ca3af; }
+    
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #6b7280;
+    }
+    
+    .popup-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    
+    .popup-overlay.show {
+      display: flex;
+    }
+    
+    .popup-box {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+    }
+    
+    .popup-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+    }
+    
+    .popup-title {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #1f2937;
+    }
+    
+    .popup-message {
+      font-size: 16px;
+      color: #6b7280;
+      margin-bottom: 20px;
+    }
+    
+    .popup-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+    
+    .popup-button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    
+    .popup-button:hover {
+      transform: scale(1.05);
+    }
+    
+    .popup-button-yes {
+      background: #22c55e;
+      color: white;
+    }
+    
+    .popup-button-no {
+      background: #ef4444;
+      color: white;
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <div id="app">
+   <div class="container">
+    <header>
+     <h1 id="title">Selamat Datang di Game Urut Angka!</h1>
+     <p class="subtitle" id="subtitle">Ayo belajar urut angka 1, 2, 3, 4 dengan cara seru!</p>
+    </header>
+    <section class="game-section">
+     <div class="left-panel">
+      <form id="gameForm">
+       <div class="form-group"><label for="playerName">Nama Pemain:</label> <input type="text" id="playerName" placeholder="Tulis nama kamu di sini" required>
+       </div><button type="submit" class="button button-primary" id="startBtn">Mulai Main</button>
+      </form>
+      <div class="timer-box" id="timerBox" style="display: none;">
+       <div style="font-size: 14px; margin-bottom: 5px;">
+        ⏱️ Waktu Bermain
+       </div>
+       <div class="timer-display" id="timerDisplay">
+        00:00
+       </div>
+      </div>
+      <div class="status-box">
+       <h3 style="margin-top: 0;">Status Permainan</h3>
+       <p id="levelText" style="font-size: 18px; font-weight: bold; color: #f97316; margin-bottom: 10px;">Level 1: Angka 1-2</p>
+       <p id="statusText">Masukkan nama kamu dan tekan Mulai Main</p>
+       <p id="targetText" style="font-weight: bold; margin-top: 10px;">Angka yang dicari: -</p>
+       <p id="scoreText">Urutan selesai: 0 | Total benar: 0</p>
+      </div>
+      <div id="messageBox" class="message" style="display: none;"></div>
+     </div>
+     <div class="right-panel">
+      <h3 style="margin-top: 0;">Papan Angka</h3>
+      <p style="font-size: 14px; color: #666;" id="boardInstruction">Klik angka 1, lalu 2 secara berurutan</p>
+      <div class="board" id="board"></div>
+     </div>
+    </section>
+    <section class="stats-section">
+     <h2 style="text-align: center; margin-bottom: 20px;">📊 Pencapaian Peserta Didik</h2>
+     <div class="stats-grid">
+      <div class="stats-card">
+       <h3 style="margin-top: 0;">Grafik Level Tercapai</h3>
+       <div class="chart-container">
+        <div class="bar-chart" id="sequenceChart"></div>
+       </div>
+      </div>
+      <div class="stats-card">
+       <h3 style="margin-top: 0;">🏆 Peringkat Pemain</h3>
+       <div id="leaderboardContainer">
+        <div class="loading">
+         Belum ada data...
+        </div>
+       </div>
+      </div>
+     </div>
+    </section>
+    <footer style="text-align: center; padding: 20px; margin-top: 30px; border-top: 2px solid #e5e7eb;">
+     <p style="margin: 0; font-size: 14px; color: #6b7280;"><strong>Created by:</strong> Suwito Setiadi - Pengawas Deli Serdang, 2025</p>
+    </footer>
+   </div><!-- Popup Konfirmasi -->
+   <div class="popup-overlay" id="popupOverlay">
+    <div class="popup-box">
+     <div class="popup-icon">
+      💾
+     </div>
+     <div class="popup-title">
+      Simpan Data Level?
+     </div>
+     <div class="popup-message" id="popupMessage">
+      Apakah kamu ingin menyimpan data Level 1 ke Canva Sheet?
+     </div>
+     <div class="popup-buttons"><button class="popup-button popup-button-yes" id="popupYes">Ya, Simpan</button> <button class="popup-button popup-button-no" id="popupNo">Tidak</button>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+    // Konfigurasi default
+    const defaultConfig = {
+      background_color: "#fffbeb",
+      surface_color: "#ffffff",
+      text_color: "#1f2937",
+      primary_color: "#f97316",
+      secondary_color: "#22c55e",
+      font_family: "Arial",
+      font_size: 16,
+      welcome_title: "Selamat Datang di Game Urut Angka!",
+      welcome_subtitle: "Ayo belajar urut angka 1, 2, 3, 4 dengan cara seru!",
+      start_button_text: "Mulai Main"
+    };
+
+    // Data papan angka
+    const boardData = [
+      "12356883",
+      "93134255",
+      "84121677",
+      "76532244",
+      "13573933",
+      "26714888",
+      "56829411",
+      "74337322",
+      "95341233",
+      "76578944"
+    ];
+
+    const numberColors = {
+      "1": "#ff6b6b",
+      "2": "#4ecdc4",
+      "3": "#ffe66d",
+      "4": "#a8e6cf",
+      "5": "#ff9ff3",
+      "6": "#feca57",
+      "7": "#48dbfb",
+      "8": "#ff6348"
+    };
+
+    // State permainan
+    let gameState = {
+      playerName: "",
+      gameStarted: false,
+      currentTarget: 0,
+      sequence: ["1", "2"],
+      score: 0,
+      selectedCells: [],
+      completedSequences: 0,
+      usedCells: new Set(),
+      startTime: null,
+      timerInterval: null,
+      currentLevel: 1,
+      maxLevel: 10
+    };
+
+    // Konfigurasi level
+    const levelConfig = {
+      1: { sequence: ["1", "2"], name: "Level 1: Angka 1-2" },
+      2: { sequence: ["1", "2", "3"], name: "Level 2: Angka 1-3" },
+      3: { sequence: ["1", "2", "3", "4"], name: "Level 3: Angka 1-4" },
+      4: { sequence: ["1", "2", "3", "4", "5"], name: "Level 4: Angka 1-5" },
+      5: { sequence: ["1", "2", "3", "4", "5", "6"], name: "Level 5: Angka 1-6" },
+      6: { sequence: ["2", "3", "4", "5", "6", "7"], name: "Level 6: Angka 2-7" },
+      7: { sequence: ["3", "4", "5", "6", "7", "8"], name: "Level 7: Angka 3-8" },
+      8: { sequence: ["1", "3", "5", "7"], name: "Level 8: Angka Ganjil" },
+      9: { sequence: ["2", "4", "6", "8"], name: "Level 9: Angka Genap" },
+      10: { sequence: ["1", "2", "3", "4", "5", "6", "7", "8"], name: "Level 10: Semua Angka!" }
+    };
+
+    // Data dari Canva Sheet atau Google Sheets
+    let allGameRecords = [];
+    // URL Google Apps Script untuk menyimpan dan memuat data
+    const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx6XXAW2oUqPpdnxF1ctcC4sD8zSn2a4qJWHL8Fsgz9JiUI0Cw_icFkEDbkQDDPML8E/exec';
+    
+    // Fungsi untuk menyimpan ke Google Sheets
+    async function saveToGoogleSheets(recordData) {
+      try {
+        const response = await fetch(GOOGLE_SHEETS_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(recordData)
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success) {
+            return { isOk: true };
+          } else {
+            return { isOk: false, error: result.error || 'Unknown error from server' };
+          }
+        } else {
+          return { isOk: false, error: `HTTP ${response.status}: ${response.statusText}` };
+        }
+      } catch (error) {
+        console.error('Error saving to Google Sheets:', error);
+        return { isOk: false, error: error.message };
+      }
+    }
+
+    // Fungsi untuk memuat data dari Google Sheets
+    async function loadFromGoogleSheets() {
+      try {
+        const response = await fetch(GOOGLE_SHEETS_URL);
+
+        if (response.ok) {
+          const records = await response.json();
+          if (Array.isArray(records)) {
+            return records;
+          } else {
+            console.error('Invalid data format from Google Sheets');
+            return [];
+          }
+        } else {
+          console.error('Failed to load from Google Sheets:', response.status);
+          return [];
+        }
+      } catch (error) {
+        console.error('Error loading from Google Sheets:', error);
+        return [];
+      }
+    }
+
+    // Fungsi untuk menampilkan popup konfirmasi
+    function showSavePopup(levelNumber) {
+      return new Promise((resolve) => {
+        const popup = document.getElementById('popupOverlay');
+        const message = document.getElementById('popupMessage');
+        const yesBtn = document.getElementById('popupYes');
+        const noBtn = document.getElementById('popupNo');
+
+        const saveTarget = window.dataSdk ? 'Canva Sheet' : (GOOGLE_SHEETS_URL.includes('YOUR_SCRIPT_ID') ? 'penyimpanan lokal' : 'Google Sheets');
+        message.textContent = `Apakah kamu ingin menyimpan data Level ${levelNumber} ke ${saveTarget}?`;
+        popup.classList.add('show');
+
+        const handleYes = () => {
+          popup.classList.remove('show');
+          yesBtn.removeEventListener('click', handleYes);
+          noBtn.removeEventListener('click', handleNo);
+          resolve(true);
+        };
+
+        const handleNo = () => {
+          popup.classList.remove('show');
+          yesBtn.removeEventListener('click', handleYes);
+          noBtn.removeEventListener('click', handleNo);
+          resolve(false);
+        };
+
+        yesBtn.addEventListener('click', handleYes);
+        noBtn.addEventListener('click', handleNo);
+      });
+    }
+
+    // Inisialisasi papan
+    function initBoard() {
+      const board = document.getElementById('board');
+      board.innerHTML = '';
+      
+      for (let row = 0; row < 10; row++) {
+        for (let col = 0; col < 8; col++) {
+          const value = boardData[row][col];
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.dataset.row = row;
+          cell.dataset.col = col;
+          cell.dataset.value = value;
+          cell.style.backgroundColor = numberColors[value] || '#f3f4f6';
+          cell.style.color = '#1a1a1a';
+          cell.innerHTML = `
+            <span class="cell-number">${value}</span>
+            <span class="cell-icon"></span>
+          `;
+          cell.onclick = () => handleCellClick(cell);
+          board.appendChild(cell);
+        }
+      }
+    }
+
+    // Timer functions
+    function startTimer() {
+      gameState.startTime = Date.now();
+      document.getElementById('timerBox').style.display = 'block';
+      
+      gameState.timerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+        const minutes = Math.floor(elapsed / 60);
+        const seconds = elapsed % 60;
+        document.getElementById('timerDisplay').textContent = 
+          `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (gameState.timerInterval) {
+        clearInterval(gameState.timerInterval);
+        gameState.timerInterval = null;
+      }
+    }
+
+    function getElapsedSeconds() {
+      if (!gameState.startTime) return 0;
+      return Math.floor((Date.now() - gameState.startTime) / 1000);
+    }
+
+    // Handle klik sel
+    function handleCellClick(cell) {
+      if (!gameState.gameStarted) {
+        showMessage("Tekan tombol Mulai Main dulu ya! 😊", "error");
+        return;
+      }
+
+      const cellKey = `${cell.dataset.row}-${cell.dataset.col}`;
+      
+      if (gameState.usedCells.has(cellKey)) {
+        showMessage("Angka ini sudah pernah kamu klik! Cari yang lain ya! 😊", "error");
+        return;
+      }
+
+      const value = cell.dataset.value;
+      const expected = gameState.sequence[gameState.currentTarget];
+      const icon = cell.querySelector('.cell-icon');
+
+      if (value === expected) {
+        icon.textContent = '✓';
+        icon.classList.add('show');
+        cell.classList.add('selected');
+        
+        gameState.selectedCells.push(cell);
+        gameState.usedCells.add(cellKey);
+        gameState.currentTarget++;
+        gameState.score++;
+        
+        showMessage(`Bagus! Kamu menemukan angka ${value}! 🎉`, "success");
+        updateStatus();
+
+        if (gameState.currentTarget >= gameState.sequence.length) {
+          gameState.completedSequences++;
+          showMessage(`Hebat sekali, ${gameState.playerName}! Kamu berhasil menyelesaikan urutan ke-${gameState.completedSequences}! 🌟`, "success");
+          setTimeout(() => {
+            resetRound();
+          }, 2000);
+        }
+      } else {
+        icon.textContent = '✗';
+        icon.classList.add('show');
+        
+        showMessage(`Ups! Ini angka ${value}. Cari angka ${expected} ya! 😊`, "error");
+        
+        setTimeout(() => {
+          icon.classList.remove('show');
+        }, 800);
+      }
+    }
+
+
+
+    // Reset putaran
+    async function resetRound() {
+      gameState.currentTarget = 0;
+      gameState.selectedCells = [];
+      updateStatus();
+      
+      const remainingCells = checkRemainingCells();
+      if (remainingCells.canContinue) {
+        const firstNum = gameState.sequence[0];
+        showMessage(`Ayo coba lagi! Cari angka ${firstNum} dulu! 🎮`, "info");
+      } else {
+        // Level selesai - tampilkan popup konfirmasi
+        const shouldSave = await showSavePopup(gameState.currentLevel);
+        
+        if (shouldSave) {
+          const duration = getElapsedSeconds();
+          const recordData = {
+            player_name: gameState.playerName,
+            completed_sequences: gameState.completedSequences,
+            total_correct: gameState.score,
+            play_duration_seconds: duration,
+            level_reached: gameState.currentLevel,
+            timestamp: new Date().toISOString()
+          };
+
+          try {
+            let saveResult;
+            let saveTarget = '';
+
+            if (window.dataSdk) {
+              saveResult = await window.dataSdk.create(recordData);
+              saveTarget = 'Canva Sheet';
+            } else if (!GOOGLE_SHEETS_URL.includes('YOUR_SCRIPT_ID')) {
+              saveResult = await saveToGoogleSheets(recordData);
+              saveTarget = 'Google Sheets';
+            } else {
+              // Fallback ke localStorage
+              const localRecords = JSON.parse(localStorage.getItem('gameRecords') || '[]');
+              localRecords.push(recordData);
+              localStorage.setItem('gameRecords', JSON.stringify(localRecords));
+              allGameRecords = localRecords;
+              renderCharts();
+              saveResult = { isOk: true };
+              saveTarget = 'penyimpanan lokal';
+            }
+
+            if (saveResult.isOk) {
+              showMessage(`✅ Level ${gameState.currentLevel} tersimpan ke ${saveTarget}! Urutan: ${gameState.completedSequences}`, "success");
+              // Tambahan alert untuk konfirmasi
+              setTimeout(() => {
+                alert(`Data berhasil disimpan!\n\nPemain: ${gameState.playerName}\nLevel: ${gameState.currentLevel}\nUrutan: ${gameState.completedSequences}\nTarget: ${saveTarget}`);
+              }, 500);
+            } else {
+              showMessage(`⚠️ Gagal menyimpan: ${saveResult.error || 'Error tidak diketahui'}`, "error");
+            }
+          } catch (error) {
+            showMessage(`⚠️ Error saat menyimpan: ${error.message}`, "error");
+          }
+        } else {
+          showMessage(`Level ${gameState.currentLevel} tidak disimpan`, "info");
+        }
+        
+        // Cek apakah naik level atau selesai
+        if (gameState.currentLevel < gameState.maxLevel) {
+          setTimeout(() => {
+            gameState.currentLevel++;
+            gameState.sequence = levelConfig[gameState.currentLevel].sequence;
+            gameState.currentTarget = 0;
+            gameState.usedCells = new Set();
+            
+            // Reset tampilan papan
+            const allCells = document.querySelectorAll('.cell');
+            allCells.forEach(cell => {
+              cell.classList.remove('selected');
+              const icon = cell.querySelector('.cell-icon');
+              icon.classList.remove('show');
+            });
+            
+            showMessage(`🎉 Naik ke ${levelConfig[gameState.currentLevel].name}! Ayo lanjut!`, "success");
+            updateStatus();
+            updateBoardInstruction();
+          }, 2000);
+        } else {
+          setTimeout(() => {
+            showMessage(`🏆 SELAMAT! Kamu menyelesaikan semua 10 level! Total urutan: ${gameState.completedSequences}! 🎊`, "success");
+            finishGame();
+          }, 2000);
+        }
+      }
+    }
+    
+    // Cek apakah masih ada sel yang bisa digunakan
+    function checkRemainingCells() {
+      const needed = {};
+      gameState.sequence.forEach(num => {
+        needed[num] = false;
+      });
+      
+      for (let row = 0; row < 10; row++) {
+        for (let col = 0; col < 8; col++) {
+          const cellKey = `${row}-${col}`;
+          if (!gameState.usedCells.has(cellKey)) {
+            const value = boardData[row][col];
+            if (gameState.sequence.includes(value)) {
+              needed[value] = true;
+            }
+          }
+        }
+      }
+      
+      const canContinue = gameState.sequence.every(num => needed[num]);
+      return { canContinue, needed };
+    }
+
+    // Update instruksi papan
+    function updateBoardInstruction() {
+      const instruction = document.getElementById('boardInstruction');
+      const seq = gameState.sequence.join(', lalu ');
+      instruction.textContent = `Klik angka ${seq} secara berurutan`;
+    }
+
+    // Selesai permainan
+    async function finishGame() {
+      stopTimer();
+      gameState.gameStarted = false;
+    }
+
+    // Tampilkan pesan
+    function showMessage(text, type) {
+      const msgBox = document.getElementById('messageBox');
+      msgBox.textContent = text;
+      msgBox.className = `message message-${type}`;
+      msgBox.style.display = 'block';
+    }
+
+    // Update status
+    function updateStatus() {
+      const expected = gameState.sequence[gameState.currentTarget] || "-";
+      document.getElementById('levelText').textContent = levelConfig[gameState.currentLevel].name;
+      document.getElementById('statusText').textContent = 
+        `Sedang bermain: ${gameState.playerName}`;
+      document.getElementById('targetText').textContent = 
+        `Angka yang dicari: ${expected}`;
+      document.getElementById('scoreText').textContent = 
+        `Urutan selesai: ${gameState.completedSequences} | Total benar: ${gameState.score}`;
+    }
+
+    // Handle form submit
+    document.getElementById('gameForm').onsubmit = (e) => {
+      e.preventDefault();
+      const name = document.getElementById('playerName').value.trim();
+      if (!name) {
+        showMessage("Isi nama dulu ya! 😊", "error");
+        return;
+      }
+      
+      // Reset semua state
+      gameState.playerName = name;
+      gameState.gameStarted = true;
+      gameState.currentLevel = 1;
+      gameState.sequence = levelConfig[1].sequence;
+      gameState.currentTarget = 0;
+      gameState.score = 0;
+      gameState.completedSequences = 0;
+      gameState.usedCells = new Set();
+      gameState.selectedCells = [];
+      
+      // Reset tampilan papan
+      const allCells = document.querySelectorAll('.cell');
+      allCells.forEach(cell => {
+        cell.classList.remove('selected');
+        const icon = cell.querySelector('.cell-icon');
+        icon.classList.remove('show');
+      });
+      
+      // Mulai timer
+      startTimer();
+      
+      showMessage(`Halo ${name}! Mulai dari Level 1! Cari urutan angka yang benar! 🎯`, "info");
+      updateStatus();
+      updateBoardInstruction();
+    };
+
+
+
+    // Render grafik
+    function renderCharts() {
+      if (allGameRecords.length === 0) {
+        document.getElementById('sequenceChart').innerHTML = '<div class="loading">Belum ada data...</div>';
+        document.getElementById('leaderboardContainer').innerHTML = '<div class="loading">Belum ada data...</div>';
+        return;
+      }
+
+      // Grafik level tercapai
+      const chartContainer = document.getElementById('sequenceChart');
+      chartContainer.innerHTML = '';
+      
+      const maxLevel = Math.max(...allGameRecords.map(r => r.level_reached), 1);
+      const recentRecords = allGameRecords.slice(-8);
+      
+      recentRecords.forEach(record => {
+        const barItem = document.createElement('div');
+        barItem.className = 'bar-item';
+        
+        const barHeight = (record.level_reached / maxLevel) * 100;
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        bar.style.height = `${barHeight}%`;
+        
+        const barValue = document.createElement('div');
+        barValue.className = 'bar-value';
+        barValue.textContent = `L${record.level_reached}`;
+        bar.appendChild(barValue);
+        
+        const barLabel = document.createElement('div');
+        barLabel.className = 'bar-label';
+        barLabel.textContent = record.player_name;
+        
+        barItem.appendChild(bar);
+        barItem.appendChild(barLabel);
+        chartContainer.appendChild(barItem);
+      });
+
+      // Tabel peringkat
+      const leaderboard = [...allGameRecords]
+        .sort((a, b) => {
+          if (b.level_reached !== a.level_reached) {
+            return b.level_reached - a.level_reached;
+          }
+          if (b.completed_sequences !== a.completed_sequences) {
+            return b.completed_sequences - a.completed_sequences;
+          }
+          return a.play_duration_seconds - b.play_duration_seconds;
+        })
+        .slice(0, 10);
+
+      const leaderboardHTML = `
+        <table class="leaderboard-table">
+          <thead>
+            <tr>
+              <th>Peringkat</th>
+              <th>Nama</th>
+              <th>Level</th>
+              <th>Urutan</th>
+              <th>Waktu</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${leaderboard.map((record, index) => {
+              const rankClass = index === 0 ? 'rank-1' : index === 1 ? 'rank-2' : index === 2 ? 'rank-3' : 'rank-other';
+              const minutes = Math.floor(record.play_duration_seconds / 60);
+              const seconds = record.play_duration_seconds % 60;
+              const timeStr = `${minutes}:${String(seconds).padStart(2, '0')}`;
+              
+              return `
+                <tr>
+                  <td><span class="rank-badge ${rankClass}">${index + 1}</span></td>
+                  <td>${record.player_name}</td>
+                  <td>Level ${record.level_reached}</td>
+                  <td>${record.completed_sequences}</td>
+                  <td>${timeStr}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+      
+      document.getElementById('leaderboardContainer').innerHTML = leaderboardHTML;
+    }
+
+    // Update UI dari config
+    function updateUI() {
+      if (!document.body) return;
+
+      const config = (window.elementSdk && window.elementSdk.config) || defaultConfig;
+
+      const app = document.getElementById('app');
+      if (!app) return;
+      app.style.backgroundColor = config.background_color || defaultConfig.background_color;
+      app.style.fontFamily = `${config.font_family || defaultConfig.font_family}, sans-serif`;
+
+      const title = document.getElementById('title');
+      if (title) {
+        title.textContent = config.welcome_title || defaultConfig.welcome_title;
+        title.style.color = config.text_color || defaultConfig.text_color;
+        title.style.fontSize = `${(config.font_size || defaultConfig.font_size) * 2}px`;
+      }
+
+      const subtitle = document.getElementById('subtitle');
+      if (subtitle) {
+        subtitle.textContent = config.welcome_subtitle || defaultConfig.welcome_subtitle;
+        subtitle.style.color = config.text_color || defaultConfig.text_color;
+        subtitle.style.fontSize = `${(config.font_size || defaultConfig.font_size) * 1.1}px`;
+      }
+
+      const startBtn = document.getElementById('startBtn');
+      if (startBtn) {
+        startBtn.textContent = config.start_button_text || defaultConfig.start_button_text;
+        startBtn.style.backgroundColor = config.primary_color || defaultConfig.primary_color;
+      }
+
+      const panels = document.querySelectorAll('.left-panel, .right-panel, .stats-card');
+      panels.forEach(panel => {
+        if (panel) {
+          panel.style.backgroundColor = config.surface_color || defaultConfig.surface_color;
+          panel.style.color = config.text_color || defaultConfig.text_color;
+        }
+      });
+
+      const input = document.getElementById('playerName');
+      if (input) {
+        input.style.borderColor = config.primary_color || defaultConfig.primary_color;
+      }
+    }
+
+    // Inisialisasi Data SDK
+    const dataHandler = {
+      onDataChanged(data) {
+        allGameRecords = data;
+        renderCharts();
+      }
+    };
+
+    // Inisialisasi
+    initBoard();
+    updateUI();
+
+    // Inisialisasi SDK
+    (async function() {
+      if (window.dataSdk) {
+        const initResult = await window.dataSdk.init(dataHandler);
+        if (!initResult.isOk) {
+          console.error("Failed to initialize Data SDK");
+        }
+      } else if (!GOOGLE_SHEETS_URL.includes('YOUR_SCRIPT_ID')) {
+        // Load dari Google Sheets jika URL tersedia
+        allGameRecords = await loadFromGoogleSheets();
+        renderCharts();
+      } else {
+        // Load dari localStorage jika tidak ada SDK atau Google Sheets
+        allGameRecords = JSON.parse(localStorage.getItem('gameRecords') || '[]');
+        renderCharts();
+      }
+
+      if (window.elementSdk) {
+        window.elementSdk.init({
+          defaultConfig,
+          
+          onConfigChange: async (config) => {
+            updateUI();
+          },
+          
+          mapToCapabilities: (config) => {
+            const cfg = config || defaultConfig;
+            return {
+              recolorables: [
+                {
+                  get: () => cfg.background_color || defaultConfig.background_color,
+                  set: (value) => {
+                    cfg.background_color = value;
+                    window.elementSdk.setConfig({ background_color: value });
+                  }
+                },
+                {
+                  get: () => cfg.surface_color || defaultConfig.surface_color,
+                  set: (value) => {
+                    cfg.surface_color = value;
+                    window.elementSdk.setConfig({ surface_color: value });
+                  }
+                },
+                {
+                  get: () => cfg.text_color || defaultConfig.text_color,
+                  set: (value) => {
+                    cfg.text_color = value;
+                    window.elementSdk.setConfig({ text_color: value });
+                  }
+                },
+                {
+                  get: () => cfg.primary_color || defaultConfig.primary_color,
+                  set: (value) => {
+                    cfg.primary_color = value;
+                    window.elementSdk.setConfig({ primary_color: value });
+                  }
+                },
+                {
+                  get: () => cfg.secondary_color || defaultConfig.secondary_color,
+                  set: (value) => {
+                    cfg.secondary_color = value;
+                    window.elementSdk.setConfig({ secondary_color: value });
+                  }
+                }
+              ],
+              fontEditable: {
+                get: () => cfg.font_family || defaultConfig.font_family,
+                set: (value) => {
+                  cfg.font_family = value;
+                  window.elementSdk.setConfig({ font_family: value });
+                }
+              },
+              fontSizeable: {
+                get: () => cfg.font_size || defaultConfig.font_size,
+                set: (value) => {
+                  cfg.font_size = value;
+                  window.elementSdk.setConfig({ font_size: value });
+                }
+              },
+              borderables: []
+            };
+          },
+          
+          mapToEditPanelValues: (config) => {
+            const cfg = config || defaultConfig;
+            return new Map([
+              ["welcome_title", cfg.welcome_title || defaultConfig.welcome_title],
+              ["welcome_subtitle", cfg.welcome_subtitle || defaultConfig.welcome_subtitle],
+              ["start_button_text", cfg.start_button_text || defaultConfig.start_button_text]
+            ]);
+          }
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
