@@ -403,7 +403,6 @@
     }
   </style>
   <style>@view-transition { navigation: auto; }</style>
-  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
  </head>
  <body>
   <div id="app">
@@ -416,7 +415,11 @@
      <div class="left-panel">
       <form id="gameForm">
        <div class="form-group"><label for="playerName">Nama Pemain:</label> <input type="text" id="playerName" placeholder="Tulis nama kamu di sini" required>
-       </div><button type="submit" class="button button-primary" id="startBtn">Mulai Main</button>
+       </div>
+       <div style="display: flex; gap: 10px;">
+         <button type="submit" class="button button-primary" id="startBtn">Mulai Main</button>
+         <button type="button" class="button button-secondary" id="shuffleBtn">Acak Papan</button>
+       </div>
       </form>
       <div class="timer-box" id="timerBox" style="display: none;">
        <div style="font-size: 14px; margin-bottom: 5px;">
@@ -550,14 +553,16 @@
       10: { sequence: ["1", "2", "3", "4", "5", "6", "7", "8"], name: "Level 10: Semua Angka!" }
     };
 
-    // Data dari Canva Sheet atau Google Sheets
+    // Data dari Google Sheets
     let allGameRecords = [];
     // URL Google Apps Script untuk menyimpan dan memuat data
-    const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbx6XXAW2oUqPpdnxF1ctcC4sD8zSn2a4qJWHL8Fsgz9JiUI0Cw_icFkEDbkQDDPML8E/exec';
+    const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbydxYUhfJQo5Vewyw0y6FxNXS_Eu-I0bzIixGZntdRLmJ3L6ALCJckBJXqy2UCQ41m4/exec';
     
     // Fungsi untuk menyimpan ke Google Sheets
     async function saveToGoogleSheets(recordData) {
       try {
+        console.log('Attempting to save to Google Sheets:', recordData);
+
         const response = await fetch(GOOGLE_SHEETS_URL, {
           method: 'POST',
           headers: {
@@ -566,41 +571,70 @@
           body: JSON.stringify(recordData)
         });
 
+        console.log('Response status:', response.status);
+        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
         if (response.ok) {
-          const result = await response.json();
-          if (result.success) {
-            return { isOk: true };
-          } else {
-            return { isOk: false, error: result.error || 'Unknown error from server' };
+          const responseText = await response.text();
+          console.log('Response text:', responseText);
+
+          try {
+            const result = JSON.parse(responseText);
+            if (result.success) {
+              console.log('Successfully saved to Google Sheets');
+              return { isOk: true };
+            } else {
+              console.error('Server returned error:', result.error);
+              return { isOk: false, error: result.error || 'Unknown error from server' };
+            }
+          } catch (parseError) {
+            console.error('Failed to parse JSON response:', parseError, 'Response text:', responseText);
+            return { isOk: false, error: 'Invalid JSON response from server' };
           }
         } else {
-          return { isOk: false, error: `HTTP ${response.status}: ${response.statusText}` };
+          const errorText = await response.text();
+          console.error('HTTP error:', response.status, response.statusText, errorText);
+          return { isOk: false, error: `HTTP ${response.status}: ${response.statusText} - ${errorText}` };
         }
       } catch (error) {
-        console.error('Error saving to Google Sheets:', error);
-        return { isOk: false, error: error.message };
+        console.error('Network error saving to Google Sheets:', error);
+        return { isOk: false, error: `Network error: ${error.message}` };
       }
     }
 
     // Fungsi untuk memuat data dari Google Sheets
     async function loadFromGoogleSheets() {
       try {
+        console.log('Attempting to load from Google Sheets');
+
         const response = await fetch(GOOGLE_SHEETS_URL);
 
+        console.log('Load response status:', response.status);
+
         if (response.ok) {
-          const records = await response.json();
-          if (Array.isArray(records)) {
-            return records;
-          } else {
-            console.error('Invalid data format from Google Sheets');
+          const responseText = await response.text();
+          console.log('Load response text:', responseText);
+
+          try {
+            const records = JSON.parse(responseText);
+            if (Array.isArray(records)) {
+              console.log('Successfully loaded', records.length, 'records from Google Sheets');
+              return records;
+            } else {
+              console.error('Invalid data format from Google Sheets - not an array:', records);
+              return [];
+            }
+          } catch (parseError) {
+            console.error('Failed to parse JSON response from load:', parseError, 'Response text:', responseText);
             return [];
           }
         } else {
-          console.error('Failed to load from Google Sheets:', response.status);
+          const errorText = await response.text();
+          console.error('Failed to load from Google Sheets:', response.status, response.statusText, errorText);
           return [];
         }
       } catch (error) {
-        console.error('Error loading from Google Sheets:', error);
+        console.error('Network error loading from Google Sheets:', error);
         return [];
       }
     }
@@ -613,7 +647,7 @@
         const yesBtn = document.getElementById('popupYes');
         const noBtn = document.getElementById('popupNo');
 
-        const saveTarget = window.dataSdk ? 'Canva Sheet' : (GOOGLE_SHEETS_URL.includes('YOUR_SCRIPT_ID') ? 'penyimpanan lokal' : 'Google Sheets');
+        const saveTarget = 'Google Sheets';
         message.textContent = `Apakah kamu ingin menyimpan data Level ${levelNumber} ke ${saveTarget}?`;
         popup.classList.add('show');
 
@@ -640,7 +674,7 @@
     function initBoard() {
       const board = document.getElementById('board');
       board.innerHTML = '';
-      
+
       for (let row = 0; row < 10; row++) {
         for (let col = 0; col < 8; col++) {
           const value = boardData[row][col];
@@ -659,6 +693,55 @@
           board.appendChild(cell);
         }
       }
+    }
+
+    // Fungsi untuk mengacak papan
+    function shuffleBoard() {
+      // Kumpulkan semua nilai dari boardData
+      let allValues = [];
+      for (let row = 0; row < 10; row++) {
+        for (let col = 0; col < 8; col++) {
+          allValues.push(boardData[row][col]);
+        }
+      }
+
+      // Acak array
+      for (let i = allValues.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [allValues[i], allValues[j]] = [allValues[j], allValues[i]];
+      }
+
+      // Atur ulang boardData
+      let index = 0;
+      for (let row = 0; row < 10; row++) {
+        let rowStr = '';
+        for (let col = 0; col < 8; col++) {
+          rowStr += allValues[index];
+          index++;
+        }
+        boardData[row] = rowStr;
+      }
+
+      // Reset state game jika sedang bermain
+      if (gameState.gameStarted) {
+        gameState.usedCells = new Set();
+        gameState.selectedCells = [];
+        gameState.currentTarget = 0;
+
+        // Reset tampilan papan
+        const allCells = document.querySelectorAll('.cell');
+        allCells.forEach(cell => {
+          cell.classList.remove('selected');
+          const icon = cell.querySelector('.cell-icon');
+          icon.classList.remove('show');
+        });
+
+        showMessage("Papan diacak! Cari urutan angka yang benar lagi! 🔄", "info");
+        updateStatus();
+      }
+
+      // Re-inisialisasi papan
+      initBoard();
     }
 
     // Timer functions
@@ -764,39 +847,25 @@
             timestamp: new Date().toISOString()
           };
 
-          try {
-            let saveResult;
-            let saveTarget = '';
+          // Simpan ke localStorage
+          const localRecords = JSON.parse(localStorage.getItem('gameRecords') || '[]');
+          localRecords.push(recordData);
+          localStorage.setItem('gameRecords', JSON.stringify(localRecords));
+          allGameRecords = localRecords;
+          renderCharts();
 
-            if (window.dataSdk) {
-              saveResult = await window.dataSdk.create(recordData);
-              saveTarget = 'Canva Sheet';
-            } else if (!GOOGLE_SHEETS_URL.includes('YOUR_SCRIPT_ID')) {
-              saveResult = await saveToGoogleSheets(recordData);
-              saveTarget = 'Google Sheets';
-            } else {
-              // Fallback ke localStorage
-              const localRecords = JSON.parse(localStorage.getItem('gameRecords') || '[]');
-              localRecords.push(recordData);
-              localStorage.setItem('gameRecords', JSON.stringify(localRecords));
-              allGameRecords = localRecords;
-              renderCharts();
-              saveResult = { isOk: true };
-              saveTarget = 'penyimpanan lokal';
-            }
+          // Simpan ke Google Sheets
+          const googleResult = await saveToGoogleSheets(recordData);
+          const saveMessage = googleResult.isOk
+            ? `✅ Level ${gameState.currentLevel} tersimpan ke penyimpanan lokal dan Google Sheets! Urutan: ${gameState.completedSequences}`
+            : `✅ Level ${gameState.currentLevel} tersimpan ke penyimpanan lokal! Urutan: ${gameState.completedSequences}. Gagal ke Google Sheets: ${googleResult.error}`;
+          showMessage(saveMessage, googleResult.isOk ? "success" : "error");
 
-            if (saveResult.isOk) {
-              showMessage(`✅ Level ${gameState.currentLevel} tersimpan ke ${saveTarget}! Urutan: ${gameState.completedSequences}`, "success");
-              // Tambahan alert untuk konfirmasi
-              setTimeout(() => {
-                alert(`Data berhasil disimpan!\n\nPemain: ${gameState.playerName}\nLevel: ${gameState.currentLevel}\nUrutan: ${gameState.completedSequences}\nTarget: ${saveTarget}`);
-              }, 500);
-            } else {
-              showMessage(`⚠️ Gagal menyimpan: ${saveResult.error || 'Error tidak diketahui'}`, "error");
-            }
-          } catch (error) {
-            showMessage(`⚠️ Error saat menyimpan: ${error.message}`, "error");
-          }
+          // Tambahan alert untuk konfirmasi
+          setTimeout(() => {
+            const target = googleResult.isOk ? 'penyimpanan lokal dan Google Sheets' : 'penyimpanan lokal (gagal ke Google Sheets)';
+            alert(`Data berhasil disimpan!\n\nPemain: ${gameState.playerName}\nLevel: ${gameState.currentLevel}\nUrutan: ${gameState.completedSequences}\nTarget: ${target}`);
+          }, 500);
         } else {
           showMessage(`Level ${gameState.currentLevel} tidak disimpan`, "info");
         }
@@ -1014,7 +1083,7 @@
     function updateUI() {
       if (!document.body) return;
 
-      const config = (window.elementSdk && window.elementSdk.config) || defaultConfig;
+      const config = defaultConfig;
 
       const app = document.getElementById('app');
       if (!app) return;
@@ -1055,111 +1124,24 @@
       }
     }
 
-    // Inisialisasi Data SDK
-    const dataHandler = {
-      onDataChanged(data) {
-        allGameRecords = data;
-        renderCharts();
-      }
-    };
 
     // Inisialisasi
     initBoard();
     updateUI();
 
-    // Inisialisasi SDK
-    (async function() {
-      if (window.dataSdk) {
-        const initResult = await window.dataSdk.init(dataHandler);
-        if (!initResult.isOk) {
-          console.error("Failed to initialize Data SDK");
-        }
-      } else if (!GOOGLE_SHEETS_URL.includes('YOUR_SCRIPT_ID')) {
-        // Load dari Google Sheets jika URL tersedia
-        allGameRecords = await loadFromGoogleSheets();
-        renderCharts();
-      } else {
-        // Load dari localStorage jika tidak ada SDK atau Google Sheets
-        allGameRecords = JSON.parse(localStorage.getItem('gameRecords') || '[]');
-        renderCharts();
-      }
+    // Event listener untuk tombol acak
+    document.getElementById('shuffleBtn').onclick = () => {
+      shuffleBoard();
+    };
 
-      if (window.elementSdk) {
-        window.elementSdk.init({
-          defaultConfig,
-          
-          onConfigChange: async (config) => {
-            updateUI();
-          },
-          
-          mapToCapabilities: (config) => {
-            const cfg = config || defaultConfig;
-            return {
-              recolorables: [
-                {
-                  get: () => cfg.background_color || defaultConfig.background_color,
-                  set: (value) => {
-                    cfg.background_color = value;
-                    window.elementSdk.setConfig({ background_color: value });
-                  }
-                },
-                {
-                  get: () => cfg.surface_color || defaultConfig.surface_color,
-                  set: (value) => {
-                    cfg.surface_color = value;
-                    window.elementSdk.setConfig({ surface_color: value });
-                  }
-                },
-                {
-                  get: () => cfg.text_color || defaultConfig.text_color,
-                  set: (value) => {
-                    cfg.text_color = value;
-                    window.elementSdk.setConfig({ text_color: value });
-                  }
-                },
-                {
-                  get: () => cfg.primary_color || defaultConfig.primary_color,
-                  set: (value) => {
-                    cfg.primary_color = value;
-                    window.elementSdk.setConfig({ primary_color: value });
-                  }
-                },
-                {
-                  get: () => cfg.secondary_color || defaultConfig.secondary_color,
-                  set: (value) => {
-                    cfg.secondary_color = value;
-                    window.elementSdk.setConfig({ secondary_color: value });
-                  }
-                }
-              ],
-              fontEditable: {
-                get: () => cfg.font_family || defaultConfig.font_family,
-                set: (value) => {
-                  cfg.font_family = value;
-                  window.elementSdk.setConfig({ font_family: value });
-                }
-              },
-              fontSizeable: {
-                get: () => cfg.font_size || defaultConfig.font_size,
-                set: (value) => {
-                  cfg.font_size = value;
-                  window.elementSdk.setConfig({ font_size: value });
-                }
-              },
-              borderables: []
-            };
-          },
-          
-          mapToEditPanelValues: (config) => {
-            const cfg = config || defaultConfig;
-            return new Map([
-              ["welcome_title", cfg.welcome_title || defaultConfig.welcome_title],
-              ["welcome_subtitle", cfg.welcome_subtitle || defaultConfig.welcome_subtitle],
-              ["start_button_text", cfg.start_button_text || defaultConfig.start_button_text]
-            ]);
-          }
-        });
-      }
+    // Inisialisasi
+    (async function() {
+      // Load dari localStorage
+      allGameRecords = JSON.parse(localStorage.getItem('gameRecords') || '[]');
+      // Load dari Google Sheets dan gabungkan
+      const googleRecords = await loadFromGoogleSheets();
+      allGameRecords = allGameRecords.concat(googleRecords);
+      renderCharts();
     })();
   </script>
 </body>
